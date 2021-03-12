@@ -2,6 +2,8 @@
 #include <memory>
 #include <iostream>
 #include <sstream>
+#include <thread>
+#include <chrono>
 
 namespace std {
     template<typename T, typename... Args>
@@ -13,9 +15,11 @@ namespace std {
 int main() {
     std::unique_ptr<medida::MetricsRegistry> mMetrics = std::make_unique<medida::MetricsRegistry>();
     medida::Timer& mLedgerClose = mMetrics->NewTimer({"ledger", "ledger", "close"});
-    auto ledgerTime = mLedgerClose.TimeScope();
-
-    ledgerTime.Stop();
+    for (int t = 100; t <= 1000; t += 100) {
+        auto ledgerTime = mLedgerClose.TimeScope();
+        std::this_thread::sleep_for(std::chrono::milliseconds(t));
+        ledgerTime.Stop();
+    }
 
     medida::reporting::JsonReporter reporter(*mMetrics);
 
