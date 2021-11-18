@@ -11,6 +11,7 @@
 #include "medida/stats/exp_decay_sample.h"
 #include "medida/stats/uniform_sample.h"
 #include "medida/stats/sliding_window_sample.h"
+#include "medida/stats/ckms_sample.h"
 
 namespace medida {
 
@@ -22,7 +23,7 @@ static const std::chrono::seconds kDefaultWindowTime = std::chrono::seconds(5 * 
 
 class Histogram::Impl {
  public:
-  Impl(SampleType sample_type = kSliding);
+  Impl(SampleType sample_type = kCKMS, std::chrono::seconds ckms_window_size = std::chrono::seconds(30));
   ~Impl();
   stats::Snapshot GetSnapshot() const;
   double sum() const;
@@ -45,12 +46,13 @@ class Histogram::Impl {
   double variance_m_;
   double variance_s_;
   mutable std::mutex mutex_;
+  SampleType const sample_type_;
 };
 
 
 
-Histogram::Histogram(SampleType sample_type)
-    : impl_ {new Histogram::Impl {sample_type}} {
+Histogram::Histogram(SampleType sample_type, std::chrono::seconds ckms_window_size)
+    : impl_ {new Histogram::Impl {sample_type, ckms_window_size}} {
 }
 
 
@@ -114,7 +116,7 @@ double Histogram::variance() const {
 // === Implementation ===
 
 
-Histogram::Impl::Impl(SampleType sample_type) {
+Histogram::Impl::Impl(SampleType sample_type, std::chrono::seconds ckms_window_size) : sample_type_(sample_type) {
   if (sample_type == kUniform) {
     sample_ = std::unique_ptr<stats::Sample>(new stats::UniformSample(kDefaultSampleSize));
   } else if (sample_type == kBiased) {
@@ -122,6 +124,8 @@ Histogram::Impl::Impl(SampleType sample_type) {
   } else if (sample_type == kSliding) {
     sample_ = std::unique_ptr<stats::Sample>(new stats::SlidingWindowSample(kDefaultSampleSize,
                                                                             kDefaultWindowTime));
+  } else if (sample_type == kCKMS) {
+    sample_ = std::unique_ptr<stats::Sample>(new stats::CKMSSample(ckms_window_size));
   } else {
       throw std::invalid_argument("invalid sample_type");
   }
@@ -146,18 +150,21 @@ void Histogram::Impl::Clear() {
 
 std::uint64_t Histogram::Impl::count() const {
   std::lock_guard<std::mutex> lock {mutex_};
-  return count_;
+  return sample_type_ == kCKMS ? sample_->MakeSnapshot().size() : count_;
 }
 
 
 double Histogram::Impl::sum() const {
   std::lock_guard<std::mutex> lock {mutex_};
-  return sum_;
+  return sample_type_ == kCKMS ? sample_->MakeSnapshot().sum() : sum_;
 }
 
 
 double Histogram::Impl::max() const {
   std::lock_guard<std::mutex> lock {mutex_};
+  if (sample_type_ == kCKMS) {
+    return sample_->MakeSnapshot().max();
+  }
   if (count_ > 0) {
     return max_;
   }
@@ -167,6 +174,9 @@ double Histogram::Impl::max() const {
 
 double Histogram::Impl::min() const {
   std::lock_guard<std::mutex> lock {mutex_};
+  if (sample_type_ == kCKMS) {
+    return sample_->MakeSnapshot().min();
+  }
   if (count_ > 0) {
     return min_;
   }
@@ -175,9 +185,11 @@ double Histogram::Impl::min() const {
 
 
 double Histogram::Impl::mean() const {
+  auto c = count();
+  auto s = sum();
   std::lock_guard<std::mutex> lock {mutex_};
-  if (count_ > 0) {
-    return sum_ / (double)count_;
+  if (c > 0) {
+    return s / (double)c;
   }
   return 0.0;
 }
@@ -185,8 +197,9 @@ double Histogram::Impl::mean() const {
 
 double Histogram::Impl::std_dev() const {
   double var = variance();
+  auto c = count();
   std::lock_guard<std::mutex> lock {mutex_};
-  if (count_ > 0) {
+  if (c > 0) {
     return std::sqrt(var);
   }
   return 0.0;
@@ -194,12 +207,16 @@ double Histogram::Impl::std_dev() const {
 
 
 double Histogram::Impl::variance() const {
-  auto c = count();
-  if (c > 1) {
-    std::lock_guard<std::mutex> lock {mutex_};
-    return variance_s_ / (c - 1.0);
+  if (sample_type_ == kCKMS) {
+    return sample_->MakeSnapshot().variance();
+  } else {
+    auto c = count();
+    if (c > 1) {
+      std::lock_guard<std::mutex> lock {mutex_};
+      return variance_s_ / (c - 1.0);
+    }
+    return 0.0;
   }
-  return 0.0;
 }
 
 
@@ -210,6 +227,12 @@ stats::Snapshot Histogram::Impl::GetSnapshot() const {
 
 void Histogram::Impl::Update(std::int64_t value) {
   sample_->Update(value);
+  if (sample_type_ == kCKMS) {
+    // When the sample type is kCKMS,
+    // we use CKMSSample to calculate various metrics
+    // such as min and max.
+    return;
+  }
   std::lock_guard<std::mutex> lock {mutex_};
   double dval = (double)value;
   if (count_ > 0) {
