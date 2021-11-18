@@ -5,6 +5,8 @@
 #ifndef MEDIDA_METRICS_SNAPSHOT_H_
 #define MEDIDA_METRICS_SNAPSHOT_H_
 
+#include "medida/stats/tdigest.h"
+
 #include <memory>
 #include <vector>
 
@@ -14,6 +16,7 @@ namespace stats {
 class Snapshot {
  public:
   Snapshot(const std::vector<double>& values);
+  Snapshot(const TDigest& tDigest);
   ~Snapshot();
   Snapshot(Snapshot const&) = delete;
   Snapshot& operator=(Snapshot const&) = delete;
@@ -27,8 +30,10 @@ class Snapshot {
   double get99thPercentile() const;
   double get999thPercentile() const;
   std::vector<double> getValues() const;
- private:
   class Impl;
+  class VectorImpl;
+  class TDigestImpl;
+ private:
   void checkImpl() const;
   std::unique_ptr<Impl> impl_;
 };

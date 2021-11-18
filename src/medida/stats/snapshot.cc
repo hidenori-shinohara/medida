@@ -22,24 +22,47 @@ static const double kP999_Q = 0.999;
 
 class Snapshot::Impl {
  public:
-  Impl(const std::vector<double>& values);
-  ~Impl();
-  std::size_t size() const;
-  double getValue(double quantile) const;
-  double getMedian() const;
-  double get75thPercentile() const;
-  double get95thPercentile() const;
-  double get98thPercentile() const;
-  double get99thPercentile() const;
-  double get999thPercentile() const;
-  std::vector<double> getValues() const;
+  virtual std::size_t size() const = 0;
+  virtual double getValue(double quantile) const = 0;
+  virtual double getMedian() const;
+  virtual double get75thPercentile() const;
+  virtual double get95thPercentile() const;
+  virtual double get98thPercentile() const;
+  virtual double get99thPercentile() const;
+  virtual double get999thPercentile() const;
+  virtual std::vector<double> getValues() const = 0;
+};
+
+class Snapshot::VectorImpl : public Snapshot::Impl {
+ public:
+  VectorImpl(const std::vector<double>& values);
+  ~VectorImpl();
+  std::size_t size() const override;
+  double getValue(double quantile) const override;
+  std::vector<double> getValues() const override;
  private:
   std::vector<double> values_;
 };
 
 
+class Snapshot::TDigestImpl : public Snapshot::Impl {
+ public:
+  TDigestImpl(const TDigest& tDigest);
+  ~TDigestImpl();
+  std::size_t size() const override;
+  double getValue(double quantile) const override;
+  std::vector<double> getValues() const override;
+ private:
+  TDigest mTDigest_;
+};
+
+
 Snapshot::Snapshot(const std::vector<double>& values)
-  : impl_ {new Snapshot::Impl {values}} {
+  : impl_ {new Snapshot::VectorImpl {values}} {
+}
+
+Snapshot::Snapshot(const TDigest& tDigest)
+  : impl_ {new Snapshot::TDigestImpl {tDigest}} {
 }
 
 Snapshot::Snapshot(Snapshot&& other)
@@ -114,27 +137,27 @@ double Snapshot::get999thPercentile() const {
 // === Implementation ===
 
 
-Snapshot::Impl::Impl(const std::vector<double>& values)
+Snapshot::VectorImpl::VectorImpl(const std::vector<double>& values)
     : values_ (values) {
   std::sort(std::begin(this->values_), std::end(this->values_));
 }
 
 
-Snapshot::Impl::~Impl() {
+Snapshot::VectorImpl::~VectorImpl() {
 }
 
 
-std::size_t Snapshot::Impl::size() const {
+std::size_t Snapshot::VectorImpl::size() const {
  return values_.size();
 }
 
 
-std::vector<double> Snapshot::Impl::getValues() const {
+std::vector<double> Snapshot::VectorImpl::getValues() const {
   return values_;
 }
 
 
-double Snapshot::Impl::getValue(double quantile) const
+double Snapshot::VectorImpl::getValue(double quantile) const
 {
     // Calculating a quantile is _mostly_ just about scaling the requested
     // quantile from the range it's given in [0.0, 1.0] to an index value in the
@@ -197,6 +220,30 @@ double Snapshot::Impl::getValue(double quantile) const
     double lower = values_.at(lo_idx);
     double upper = values_.at(hi_idx);
     return lower + (delta * (upper - lower));
+}
+
+Snapshot::TDigestImpl::TDigestImpl(const TDigest& tDigest)
+    : mTDigest_ (tDigest) {
+}
+
+
+Snapshot::TDigestImpl::~TDigestImpl() {
+}
+
+
+std::size_t Snapshot::TDigestImpl::size() const {
+    return mTDigest_.count();
+}
+
+
+std::vector<double> Snapshot::TDigestImpl::getValues() const {
+    throw std::runtime_error("Can't return the values since t-digests don't them");
+}
+
+
+double Snapshot::TDigestImpl::getValue(double quantile) const
+{
+    return mTDigest_.estimateQuantile(quantile);
 }
 
 double Snapshot::Impl::getMedian() const {

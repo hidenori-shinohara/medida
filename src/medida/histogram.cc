@@ -11,6 +11,7 @@
 #include "medida/stats/exp_decay_sample.h"
 #include "medida/stats/uniform_sample.h"
 #include "medida/stats/sliding_window_sample.h"
+#include "medida/stats/tdigest_sample.h"
 
 namespace medida {
 
@@ -122,6 +123,8 @@ Histogram::Impl::Impl(SampleType sample_type) {
   } else if (sample_type == kSliding) {
     sample_ = std::unique_ptr<stats::Sample>(new stats::SlidingWindowSample(kDefaultSampleSize,
                                                                             kDefaultWindowTime));
+  } else if (sample_type == kDigest) {
+    sample_ = std::unique_ptr<stats::Sample>(new stats::TDigestSample());
   } else {
       throw std::invalid_argument("invalid sample_type");
   }
