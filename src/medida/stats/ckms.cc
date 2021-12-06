@@ -60,7 +60,12 @@ double CKMS::get(double q) {
     rankMin += prev->g;
 
     if (rankMin + cur->g + cur->delta > bound) {
-      return prev->value;
+      // TODO(hidenori):
+      // Not quite sure why, but the original code always underestimates.
+      // For instance, for {1, 2, 3, 4, ..., 10}, it returns 8 for the 90-th percentile.
+      // In the original code, this returns prev->value.
+      // But changing it to cur->value() seems to fix it.
+      return cur->value;
     }
   }
 

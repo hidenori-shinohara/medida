@@ -68,7 +68,7 @@ Snapshot CKMSSample::MakeSnapshot() const {
 // TODO(hidenori): Think about what is the appropriate default accuracy.
 // For now, I'm putting {99th percentile, 0.1% error}.
 CKMSSample::Impl::Impl() :
-    mCKMS({{0.99, 0.001}})
+    mCKMS({})
 {
     Clear();
 }
