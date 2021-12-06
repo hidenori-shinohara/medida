@@ -21,3 +21,21 @@ TEST(CKMSSampleTest, aSameValueEverySecond) {
   EXPECT_EQ(100, snapshot.getValue(0.99));
   EXPECT_EQ(100, snapshot.getValue(1));
 }
+
+TEST(CKMSSampleTest, aThreeDifferentValues) {
+  CKMSSample sample;
+
+  auto t = medida::Clock::now();
+  for (auto i = 0; i < 300; i++) {
+    sample.Update(i % 3, t);
+    t += std::chrono::seconds(1);
+  }
+
+  EXPECT_EQ(300, sample.size());
+
+  auto snapshot = sample.MakeSnapshot();
+
+  EXPECT_EQ(1, snapshot.getValue(0.5));
+  EXPECT_EQ(2, snapshot.getValue(0.99));
+  EXPECT_EQ(2, snapshot.getValue(1));
+}
