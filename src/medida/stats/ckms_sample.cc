@@ -16,17 +16,22 @@
 namespace medida {
 namespace stats {
 
+// TODO(hidenori)
+// Figure out how to properly update the window size.
 class CKMSSample::Impl {
  public:
-  Impl();
+  Impl(std::chrono::seconds = std::chrono::seconds(30));
   ~Impl();
   void Clear();
   std::uint64_t size() const;
   void Update(std::int64_t value);
   void Update(std::int64_t value, Clock::time_point timestamp);
-  Snapshot MakeSnapshot() const;
+  Snapshot MakeSnapshot();
  private:
-  CKMS mCKMS;
+  void shift();
+  std::shared_ptr<CKMS> mPrev, mCur;
+  Clock::time_point mPrevStartingPoint;
+  std::chrono::seconds mWindowSize;
 };
 
 CKMSSample::CKMSSample() : impl_ {new CKMSSample::Impl {}} {
@@ -64,11 +69,18 @@ Snapshot CKMSSample::MakeSnapshot() const {
 
 // === Implementation ===
 
+Clock::time_point getCurrentWindowStartingPoint(Clock::time_point time, std::chrono::seconds windowSize)
+{
+    return time - (std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()) % windowSize);
+}
 
 // TODO(hidenori): Think about what is the appropriate default accuracy.
 // For now, I'm putting {99th percentile, 0.1% error}.
-CKMSSample::Impl::Impl() :
-    mCKMS({})
+CKMSSample::Impl::Impl(std::chrono::seconds windowSize) :
+    mPrev({}),
+    mCur({}),
+    mPrevStartingPoint(getCurrentWindowStartingPoint(medida::Clock::now(), windowSize) - windowSize),
+    mWindowSize(windowSize)
 {
     Clear();
 }
@@ -83,8 +95,7 @@ void CKMSSample::Impl::Clear() {
 
 
 std::uint64_t CKMSSample::Impl::size() const {
-    // TODO(hidenori) This is a placeholder.
-    return 0;
+    return mPrev->count();
 }
 
 
@@ -93,15 +104,45 @@ void CKMSSample::Impl::Update(std::int64_t value) {
 }
 
 
+void CKMSSample::Impl::shift() {
+    auto curStartingPoint = getCurrentWindowStartingPoint(medida::Clock::now(), mWindowSize);
+    if (mPrevStartingPoint + mWindowSize == curStartingPoint)
+    {
+        return;
+    }
+    else if (mPrevStartingPoint + 2 * mWindowSize == curStartingPoint)
+    {
+        // mCur should be the next mPrev.
+        std::swap(mPrev, mCur);
+        mCur->reset();
+    }
+    else if (mPrevStartingPoint + 2 * mWindowSize < curStartingPoint)
+    {
+        // We haven't had any input for long enough that both mPrev and mCur should be empty.
+        mPrev->reset();
+        mCur->reset();
+        mPrevStartingPoint = curStartingPoint - mWindowSize;
+    }
+    else
+    {
+        throw std::invalid_argument("mPrevStartingPoint has an unexpected value");
+    }
+}
+
 void CKMSSample::Impl::Update(std::int64_t value, Clock::time_point timestamp) {
-    // TODO(hidenori): This is where I need to pick the right CKMS to add this value
-    // and possibly swap the two CKMS's.
+    shift();
+    auto now = medida::Clock::now();
+    if (timestamp < now && timestamp < getCurrentWindowStartingPoint(now, mWindowSize))
+    {
+        // Inser this value only if timestamp lies in the current time window.
+        mCur->insert(value);
+    }
 }
 
 
-Snapshot CKMSSample::Impl::MakeSnapshot() const {
-    // TODO(hidenori): Decide if this is the right value to return.
-    return {mCKMS};
+Snapshot CKMSSample::Impl::MakeSnapshot() {
+    shift();
+    return {*mPrev};
 }
 
 
