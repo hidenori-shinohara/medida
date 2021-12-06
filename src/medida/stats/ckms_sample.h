@@ -2,8 +2,8 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#ifndef MEDIDA_TDIGEST_SAMPLE_H_
-#define MEDIDA_TDIGEST_SAMPLE_H_
+#ifndef MEDIDA_CKMS_SAMPLE_H_
+#define MEDIDA_CKMS_SAMPLE_H_
 
 #include <cstdint>
 #include <memory>
@@ -15,10 +15,10 @@
 namespace medida {
 namespace stats {
 
-class TDigestSample : public Sample {
+class CkmsSample : public Sample {
  public:
-  TDigestSample();
-  ~TDigestSample();
+  CkmsSample();
+  ~CkmsSample();
   virtual void Clear();
   virtual std::uint64_t size() const;
   virtual void Update(std::int64_t value);
@@ -32,4 +32,4 @@ class TDigestSample : public Sample {
 } // namespace stats
 } // namespace medida
 
-#endif // MEDIDA_TDIGEST_SAMPLE_H_
+#endif // MEDIDA_CKMS_SAMPLE_H_

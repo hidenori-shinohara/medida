@@ -11,7 +11,7 @@ namespace medida {
 
 class SamplingInterface {
 public:
-  enum SampleType { kUniform, kBiased, kSliding, kDigest };
+  enum SampleType { kUniform, kBiased, kSliding, kCkms };
   virtual ~SamplingInterface() {};
   virtual stats::Snapshot GetSnapshot() const = 0;
 };

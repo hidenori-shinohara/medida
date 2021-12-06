@@ -45,15 +45,15 @@ class Snapshot::VectorImpl : public Snapshot::Impl {
 };
 
 
-class Snapshot::TDigestImpl : public Snapshot::Impl {
+class Snapshot::CkmsImpl : public Snapshot::Impl {
  public:
-  TDigestImpl(const TDigest& tDigest);
-  ~TDigestImpl();
+  CkmsImpl(const Ckms& ckms);
+  ~CkmsImpl();
   std::size_t size() const override;
   double getValue(double quantile) const override;
   std::vector<double> getValues() const override;
  private:
-  TDigest mTDigest_;
+  Ckms mCkms_;
 };
 
 
@@ -61,8 +61,8 @@ Snapshot::Snapshot(const std::vector<double>& values)
   : impl_ {new Snapshot::VectorImpl {values}} {
 }
 
-Snapshot::Snapshot(const TDigest& tDigest)
-  : impl_ {new Snapshot::TDigestImpl {tDigest}} {
+Snapshot::Snapshot(const Ckms& ckms)
+  : impl_ {new Snapshot::CkmsImpl {ckms}} {
 }
 
 Snapshot::Snapshot(Snapshot&& other)
@@ -222,28 +222,28 @@ double Snapshot::VectorImpl::getValue(double quantile) const
     return lower + (delta * (upper - lower));
 }
 
-Snapshot::TDigestImpl::TDigestImpl(const TDigest& tDigest)
-    : mTDigest_ (tDigest) {
+Snapshot::CkmsImpl::CkmsImpl(const Ckms& ckms)
+    : mCkms_ (ckms) {
 }
 
 
-Snapshot::TDigestImpl::~TDigestImpl() {
+Snapshot::CkmsImpl::~CkmsImpl() {
 }
 
 
-std::size_t Snapshot::TDigestImpl::size() const {
-    return mTDigest_.count();
+std::size_t Snapshot::CkmsImpl::size() const {
+    return mCkms_.count();
 }
 
 
-std::vector<double> Snapshot::TDigestImpl::getValues() const {
-    throw std::runtime_error("Can't return the values since t-digests don't them");
+std::vector<double> Snapshot::CkmsImpl::getValues() const {
+    throw std::runtime_error("Can't return the values since ckms doesn't have them");
 }
 
 
-double Snapshot::TDigestImpl::getValue(double quantile) const
+double Snapshot::CkmsImpl::getValue(double quantile) const
 {
-    return mTDigest_.estimateQuantile(quantile);
+    return mCkms_.estimateQuantile(quantile);
 }
 
 double Snapshot::Impl::getMedian() const {

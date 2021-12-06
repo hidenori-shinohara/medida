@@ -32,7 +32,7 @@ set(medida_SOURCES
   src/medida/stats/uniform_sample.cc
   src/medida/stats/exp_decay_sample.cc
   src/medida/stats/sliding_window_sample.cc
-  src/medida/stats/tdigest_sample.cc
+  src/medida/stats/ckms_sample.cc
   src/medida/buckets.cc
   src/medida/counter.cc
   src/medida/meter.cc
@@ -75,8 +75,8 @@ set(medida_HEADERS
   src/medida/stats/sample.h
   src/medida/stats/snapshot.h
   src/medida/stats/uniform_sample.h
-  src/medida/stats/tdigest.h
-  src/medida/stats/tdigest_sample.h
+  src/medida/stats/ckms.h
+  src/medida/stats/ckms_sample.h
 )
 
 ## Dependencies
@@ -138,8 +138,8 @@ install(FILES
   src/medida/stats/ewma.h
   src/medida/stats/exp_decay_sample.h
   src/medida/stats/sliding_window_sample.h
-  src/medida/stats/tdigest.h
-  src/medida/stats/tdigest_sample.h
+  src/medida/stats/ckms.h
+  src/medida/stats/ckms_sample.h
   src/medida/stats/sample.h
   src/medida/stats/snapshot.h
   src/medida/stats/uniform_sample.h

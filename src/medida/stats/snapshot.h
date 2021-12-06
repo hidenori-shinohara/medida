@@ -5,7 +5,7 @@
 #ifndef MEDIDA_METRICS_SNAPSHOT_H_
 #define MEDIDA_METRICS_SNAPSHOT_H_
 
-#include "medida/stats/tdigest.h"
+#include "medida/stats/ckms.h"
 
 #include <memory>
 #include <vector>
@@ -16,7 +16,7 @@ namespace stats {
 class Snapshot {
  public:
   Snapshot(const std::vector<double>& values);
-  Snapshot(const TDigest& tDigest);
+  Snapshot(const Ckms& ckms);
   ~Snapshot();
   Snapshot(Snapshot const&) = delete;
   Snapshot& operator=(Snapshot const&) = delete;
@@ -32,7 +32,7 @@ class Snapshot {
   std::vector<double> getValues() const;
   class Impl;
   class VectorImpl;
-  class TDigestImpl;
+  class CkmsImpl;
  private:
   void checkImpl() const;
   std::unique_ptr<Impl> impl_;

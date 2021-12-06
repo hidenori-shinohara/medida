@@ -2,7 +2,7 @@
 // under the Apache License, Version 2.0. See the COPYING file at the root
 // of this distribution or at http://www.apache.org/licenses/LICENSE-2.0
 
-#include "medida/stats/tdigest_sample.h"
+#include "medida/stats/ckms_sample.h"
 
 #include <algorithm>
 #include <atomic>
@@ -16,7 +16,7 @@
 namespace medida {
 namespace stats {
 
-class TDigestSample::Impl {
+class CkmsSample::Impl {
  public:
   Impl();
   ~Impl();
@@ -26,38 +26,38 @@ class TDigestSample::Impl {
   void Update(std::int64_t value, Clock::time_point timestamp);
   Snapshot MakeSnapshot() const;
  private:
-  TDigest mTDigest;
+  Ckms mCkms;
 };
 
-TDigestSample::TDigestSample() : impl_ {new TDigestSample::Impl {}} {
+CkmsSample::CkmsSample() : impl_ {new CkmsSample::Impl {}} {
 }
 
 
-TDigestSample::~TDigestSample() {
+CkmsSample::~CkmsSample() {
 }
 
 
-void TDigestSample::Clear() {
+void CkmsSample::Clear() {
   impl_->Clear();
 }
 
 
-std::uint64_t TDigestSample::size() const {
+std::uint64_t CkmsSample::size() const {
   return impl_->size();
 }
 
 
-void TDigestSample::Update(std::int64_t value) {
+void CkmsSample::Update(std::int64_t value) {
   impl_->Update(value);
 }
 
 
-void TDigestSample::Update(std::int64_t value, Clock::time_point timestamp) {
+void CkmsSample::Update(std::int64_t value, Clock::time_point timestamp) {
   impl_->Update(value, timestamp);
 }
 
 
-Snapshot TDigestSample::MakeSnapshot() const {
+Snapshot CkmsSample::MakeSnapshot() const {
   return impl_->MakeSnapshot();
 }
 
@@ -65,34 +65,34 @@ Snapshot TDigestSample::MakeSnapshot() const {
 // === Implementation ===
 
 
-TDigestSample::Impl::Impl() {
+CkmsSample::Impl::Impl() {
     Clear();
 }
 
 
-TDigestSample::Impl::~Impl() {
+CkmsSample::Impl::~Impl() {
 }
 
 
-void TDigestSample::Impl::Clear() {
+void CkmsSample::Impl::Clear() {
 }
 
 
-std::uint64_t TDigestSample::Impl::size() const {
+std::uint64_t CkmsSample::Impl::size() const {
 }
 
 
-void TDigestSample::Impl::Update(std::int64_t value) {
+void CkmsSample::Impl::Update(std::int64_t value) {
   Update(value, Clock::now());
 }
 
 
-void TDigestSample::Impl::Update(std::int64_t value, Clock::time_point timestamp) {
+void CkmsSample::Impl::Update(std::int64_t value, Clock::time_point timestamp) {
 }
 
 
-Snapshot TDigestSample::Impl::MakeSnapshot() const {
-    return {mTDigest};
+Snapshot CkmsSample::Impl::MakeSnapshot() const {
+    return {mCkms};
 }
 
 

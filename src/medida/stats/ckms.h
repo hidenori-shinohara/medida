@@ -5,7 +5,7 @@
 namespace medida {
 namespace stats {
 
-class TDigest {
+class Ckms {
     public:
         // TODO(hidenori) these are obviously a placeholder.
       double count() const { return 0; }
