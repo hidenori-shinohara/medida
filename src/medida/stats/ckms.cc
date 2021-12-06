@@ -6,41 +6,28 @@
 #include <limits>
 #include <memory>
 
+// TODO(hidenori): properly take care of the license
+
 namespace medida {
 namespace stats {
 
-void Ckms::add(double v) {
-    // TODO(hidenori): Implement this
+std::size_t CKMS::count() const {
+    return count_;
 }
 
-
-double Ckms::count() const {
-    // TODO(hidenori): This is obviously a placeholder.
-    return 0;
-}
-
-double Ckms::estimateQuantile(double q) {
-    // TODO(hidenori): This is obviously a placeholder.
-    if (q < 0 || 1 < q) {
-        return -1;
-    }
-    return 0;
-}
-
-
-CKMSQuantiles::Quantile::Quantile(double quantile, double error)
+CKMS::Quantile::Quantile(double quantile, double error)
     : quantile(quantile),
       error(error),
       u(2.0 * error / (1.0 - quantile)),
       v(2.0 * error / quantile) {}
 
-CKMSQuantiles::Item::Item(double value, int lower_delta, int delta)
+CKMS::Item::Item(double value, int lower_delta, int delta)
     : value(value), g(lower_delta), delta(delta) {}
 
-CKMSQuantiles::CKMSQuantiles(const std::vector<Quantile>& quantiles)
+CKMS::CKMS(const std::vector<Quantile>& quantiles)
     : quantiles_(quantiles), count_(0), buffer_{}, buffer_count_(0) {}
 
-void CKMSQuantiles::insert(double value) {
+void CKMS::insert(double value) {
   buffer_[buffer_count_] = value;
   ++buffer_count_;
 
@@ -50,7 +37,7 @@ void CKMSQuantiles::insert(double value) {
   }
 }
 
-double CKMSQuantiles::get(double q) {
+double CKMS::get(double q) {
   insertBatch();
   compress();
 
@@ -80,13 +67,13 @@ double CKMSQuantiles::get(double q) {
   return sample_.back().value;
 }
 
-void CKMSQuantiles::reset() {
+void CKMS::reset() {
   count_ = 0;
   sample_.clear();
   buffer_count_ = 0;
 }
 
-double CKMSQuantiles::allowableError(int rank) {
+double CKMS::allowableError(int rank) {
   auto size = sample_.size();
   double minError = size + 1;
 
@@ -105,7 +92,7 @@ double CKMSQuantiles::allowableError(int rank) {
   return minError;
 }
 
-bool CKMSQuantiles::insertBatch() {
+bool CKMS::insertBatch() {
   if (buffer_count_ == 0) {
     return false;
   }
@@ -148,7 +135,7 @@ bool CKMSQuantiles::insertBatch() {
   return true;
 }
 
-void CKMSQuantiles::compress() {
+void CKMS::compress() {
   if (sample_.size() < 2) {
     return;
   }

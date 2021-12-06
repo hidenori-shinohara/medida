@@ -23,13 +23,13 @@ static const double kP999_Q = 0.999;
 class Snapshot::Impl {
  public:
   virtual std::size_t size() const = 0;
-  virtual double getValue(double quantile) const = 0;
-  virtual double getMedian() const;
-  virtual double get75thPercentile() const;
-  virtual double get95thPercentile() const;
-  virtual double get98thPercentile() const;
-  virtual double get99thPercentile() const;
-  virtual double get999thPercentile() const;
+  virtual double getValue(double quantile) = 0;
+  virtual double getMedian();
+  virtual double get75thPercentile();
+  virtual double get95thPercentile();
+  virtual double get98thPercentile();
+  virtual double get99thPercentile();
+  virtual double get999thPercentile();
   virtual std::vector<double> getValues() const = 0;
 };
 
@@ -38,22 +38,22 @@ class Snapshot::VectorImpl : public Snapshot::Impl {
   VectorImpl(const std::vector<double>& values);
   ~VectorImpl();
   std::size_t size() const override;
-  double getValue(double quantile) const override;
+  double getValue(double quantile) override;
   std::vector<double> getValues() const override;
  private:
   std::vector<double> values_;
 };
 
 
-class Snapshot::CkmsImpl : public Snapshot::Impl {
+class Snapshot::CKMSImpl : public Snapshot::Impl {
  public:
-  CkmsImpl(const Ckms& ckms);
-  ~CkmsImpl();
+  CKMSImpl(const CKMS& ckms);
+  ~CKMSImpl();
   std::size_t size() const override;
-  double getValue(double quantile) const override;
+  double getValue(double quantile) override;
   std::vector<double> getValues() const override;
  private:
-  Ckms mCkms_;
+  CKMS mCKMS_;
 };
 
 
@@ -61,8 +61,8 @@ Snapshot::Snapshot(const std::vector<double>& values)
   : impl_ {new Snapshot::VectorImpl {values}} {
 }
 
-Snapshot::Snapshot(const Ckms& ckms)
-  : impl_ {new Snapshot::CkmsImpl {ckms}} {
+Snapshot::Snapshot(const CKMS& ckms)
+  : impl_ {new Snapshot::CKMSImpl {ckms}} {
 }
 
 Snapshot::Snapshot(Snapshot&& other)
@@ -92,43 +92,43 @@ std::vector<double> Snapshot::getValues() const {
 }
 
 
-double Snapshot::getValue(double quantile) const {
+double Snapshot::getValue(double quantile) {
   checkImpl();
   return impl_->getValue(quantile);
 }
 
 
-double Snapshot::getMedian() const {
+double Snapshot::getMedian() {
   checkImpl();
   return impl_->getMedian();
 }
 
 
-double Snapshot::get75thPercentile() const {
+double Snapshot::get75thPercentile() {
   checkImpl();
   return impl_->get75thPercentile();
 }
 
 
-double Snapshot::get95thPercentile() const {
+double Snapshot::get95thPercentile() {
   checkImpl();
   return impl_->get95thPercentile();
 }
 
 
-double Snapshot::get98thPercentile() const {
+double Snapshot::get98thPercentile() {
   checkImpl();
   return impl_->get98thPercentile();
 }
 
 
-double Snapshot::get99thPercentile() const {
+double Snapshot::get99thPercentile() {
   checkImpl();
   return impl_->get99thPercentile();
 }
 
 
-double Snapshot::get999thPercentile() const {
+double Snapshot::get999thPercentile() {
   checkImpl();
   return impl_->get999thPercentile();
 }
@@ -157,7 +157,7 @@ std::vector<double> Snapshot::VectorImpl::getValues() const {
 }
 
 
-double Snapshot::VectorImpl::getValue(double quantile) const
+double Snapshot::VectorImpl::getValue(double quantile)
 {
     // Calculating a quantile is _mostly_ just about scaling the requested
     // quantile from the range it's given in [0.0, 1.0] to an index value in the
@@ -222,56 +222,56 @@ double Snapshot::VectorImpl::getValue(double quantile) const
     return lower + (delta * (upper - lower));
 }
 
-Snapshot::CkmsImpl::CkmsImpl(const Ckms& ckms)
-    : mCkms_ (ckms) {
+Snapshot::CKMSImpl::CKMSImpl(const CKMS& ckms)
+    : mCKMS_ (ckms) {
 }
 
 
-Snapshot::CkmsImpl::~CkmsImpl() {
+Snapshot::CKMSImpl::~CKMSImpl() {
 }
 
 
-std::size_t Snapshot::CkmsImpl::size() const {
-    return mCkms_.count();
+std::size_t Snapshot::CKMSImpl::size() const {
+    return mCKMS_.count();
 }
 
 
-std::vector<double> Snapshot::CkmsImpl::getValues() const {
+std::vector<double> Snapshot::CKMSImpl::getValues() const {
     throw std::runtime_error("Can't return the values since ckms doesn't have them");
 }
 
 
-double Snapshot::CkmsImpl::getValue(double quantile) const
+double Snapshot::CKMSImpl::getValue(double quantile)
 {
-    return mCkms_.estimateQuantile(quantile);
+    return mCKMS_.get(quantile);
 }
 
-double Snapshot::Impl::getMedian() const {
+double Snapshot::Impl::getMedian() {
   return getValue(kMEDIAN_Q);
 }
 
 
-double Snapshot::Impl::get75thPercentile() const {
+double Snapshot::Impl::get75thPercentile() {
   return getValue(kP75_Q);
 }
 
 
-double Snapshot::Impl::get95thPercentile() const {
+double Snapshot::Impl::get95thPercentile() {
   return getValue(kP95_Q);
 }
 
 
-double Snapshot::Impl::get98thPercentile() const {
+double Snapshot::Impl::get98thPercentile() {
   return getValue(kP98_Q);
 }
 
 
-double Snapshot::Impl::get99thPercentile() const {
+double Snapshot::Impl::get99thPercentile() {
   return getValue(kP99_Q);
 }
 
 
-double Snapshot::Impl::get999thPercentile() const {
+double Snapshot::Impl::get999thPercentile() {
   return getValue(kP999_Q);
 }
 

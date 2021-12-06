@@ -15,10 +15,10 @@
 namespace medida {
 namespace stats {
 
-class CkmsSample : public Sample {
+class CKMSSample : public Sample {
  public:
-  CkmsSample();
-  ~CkmsSample();
+  CKMSSample();
+  ~CKMSSample();
   virtual void Clear();
   virtual std::uint64_t size() const;
   virtual void Update(std::int64_t value);

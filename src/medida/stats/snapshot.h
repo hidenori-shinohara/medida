@@ -16,23 +16,23 @@ namespace stats {
 class Snapshot {
  public:
   Snapshot(const std::vector<double>& values);
-  Snapshot(const Ckms& ckms);
+  Snapshot(const CKMS& ckms);
   ~Snapshot();
   Snapshot(Snapshot const&) = delete;
   Snapshot& operator=(Snapshot const&) = delete;
   Snapshot(Snapshot&&);
   std::size_t size() const;
-  double getValue(double quantile) const;
-  double getMedian() const;
-  double get75thPercentile() const;
-  double get95thPercentile() const;
-  double get98thPercentile() const;
-  double get99thPercentile() const;
-  double get999thPercentile() const;
+  double getValue(double quantile);
+  double getMedian();
+  double get75thPercentile();
+  double get95thPercentile();
+  double get98thPercentile();
+  double get99thPercentile();
+  double get999thPercentile();
   std::vector<double> getValues() const;
   class Impl;
   class VectorImpl;
-  class CkmsImpl;
+  class CKMSImpl;
  private:
   void checkImpl() const;
   std::unique_ptr<Impl> impl_;

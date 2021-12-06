@@ -3,22 +3,22 @@
 
 using namespace medida::stats;
 
-TEST(CkmsTest, aCkmsAddHundredOnes) {
-  auto ckms = Ckms();
+TEST(CKMSTest, aCKMSAddHundredOnes) {
+  auto ckms = CKMS({{0.99, 0.001}});
   for (int i = 0; i < 100; i++) {
-      ckms.add(1);
+      ckms.insert(1);
   }
-  EXPECT_NEAR(1, ckms.estimateQuantile(0.5), 1e-6);
-  EXPECT_NEAR(1, ckms.estimateQuantile(0.99), 1e-6);
-  EXPECT_NEAR(1, ckms.estimateQuantile(1), 1e-6);
+  EXPECT_NEAR(1, ckms.get(0.5), 1e-6);
+  EXPECT_NEAR(1, ckms.get(0.99), 1e-6);
+  EXPECT_NEAR(1, ckms.get(1), 1e-6);
 }
 
-TEST(CkmsTest, aCkmsAddZeroToHundred) {
-  auto ckms = Ckms();
+TEST(CKMSTest, aCKMSAddZeroToHundred) {
+  auto ckms = CKMS({{0.99, 0.001}});
   for (int i = 0; i <= 100; i++) {
-      ckms.add(i);
+      ckms.insert(i);
   }
-  EXPECT_NEAR(50, ckms.estimateQuantile(0.5), 1e-6);
-  EXPECT_NEAR(99, ckms.estimateQuantile(0.99), 1e-6);
-  EXPECT_NEAR(100, ckms.estimateQuantile(1), 1e-6);
+  EXPECT_NEAR(50, ckms.get(0.5), 1e-6);
+  EXPECT_NEAR(99, ckms.get(0.99), 1e-6);
+  EXPECT_NEAR(100, ckms.get(1), 1e-6);
 }

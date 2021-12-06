@@ -16,7 +16,7 @@
 namespace medida {
 namespace stats {
 
-class CkmsSample::Impl {
+class CKMSSample::Impl {
  public:
   Impl();
   ~Impl();
@@ -26,38 +26,38 @@ class CkmsSample::Impl {
   void Update(std::int64_t value, Clock::time_point timestamp);
   Snapshot MakeSnapshot() const;
  private:
-  Ckms mCkms;
+  CKMS mCKMS;
 };
 
-CkmsSample::CkmsSample() : impl_ {new CkmsSample::Impl {}} {
+CKMSSample::CKMSSample() : impl_ {new CKMSSample::Impl {}} {
 }
 
 
-CkmsSample::~CkmsSample() {
+CKMSSample::~CKMSSample() {
 }
 
 
-void CkmsSample::Clear() {
+void CKMSSample::Clear() {
   impl_->Clear();
 }
 
 
-std::uint64_t CkmsSample::size() const {
+std::uint64_t CKMSSample::size() const {
   return impl_->size();
 }
 
 
-void CkmsSample::Update(std::int64_t value) {
+void CKMSSample::Update(std::int64_t value) {
   impl_->Update(value);
 }
 
 
-void CkmsSample::Update(std::int64_t value, Clock::time_point timestamp) {
+void CKMSSample::Update(std::int64_t value, Clock::time_point timestamp) {
   impl_->Update(value, timestamp);
 }
 
 
-Snapshot CkmsSample::MakeSnapshot() const {
+Snapshot CKMSSample::MakeSnapshot() const {
   return impl_->MakeSnapshot();
 }
 
@@ -65,39 +65,43 @@ Snapshot CkmsSample::MakeSnapshot() const {
 // === Implementation ===
 
 
-CkmsSample::Impl::Impl() {
+// TODO(hidenori): Think about what is the appropriate default accuracy.
+// For now, I'm putting {99th percentile, 0.1% error}.
+CKMSSample::Impl::Impl() :
+    mCKMS({{0.99, 0.001}})
+{
     Clear();
 }
 
 
-CkmsSample::Impl::~Impl() {
+CKMSSample::Impl::~Impl() {
 }
 
 
-void CkmsSample::Impl::Clear() {
+void CKMSSample::Impl::Clear() {
 }
 
 
-std::uint64_t CkmsSample::Impl::size() const {
+std::uint64_t CKMSSample::Impl::size() const {
     // TODO(hidenori) This is a placeholder.
     return 0;
 }
 
 
-void CkmsSample::Impl::Update(std::int64_t value) {
+void CKMSSample::Impl::Update(std::int64_t value) {
   Update(value, Clock::now());
 }
 
 
-void CkmsSample::Impl::Update(std::int64_t value, Clock::time_point timestamp) {
+void CKMSSample::Impl::Update(std::int64_t value, Clock::time_point timestamp) {
     // TODO(hidenori): This is where I need to pick the right CKMS to add this value
     // and possibly swap the two CKMS's.
 }
 
 
-Snapshot CkmsSample::Impl::MakeSnapshot() const {
+Snapshot CKMSSample::Impl::MakeSnapshot() const {
     // TODO(hidenori): Decide if this is the right value to return.
-    return {mCkms};
+    return {mCKMS};
 }
 
 

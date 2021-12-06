@@ -123,8 +123,8 @@ Histogram::Impl::Impl(SampleType sample_type) {
   } else if (sample_type == kSliding) {
     sample_ = std::unique_ptr<stats::Sample>(new stats::SlidingWindowSample(kDefaultSampleSize,
                                                                             kDefaultWindowTime));
-  } else if (sample_type == kCkms) {
-    sample_ = std::unique_ptr<stats::Sample>(new stats::CkmsSample());
+  } else if (sample_type == kCKMS) {
+    sample_ = std::unique_ptr<stats::Sample>(new stats::CKMSSample());
   } else {
       throw std::invalid_argument("invalid sample_type");
   }
