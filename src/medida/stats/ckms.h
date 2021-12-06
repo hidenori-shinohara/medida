@@ -11,6 +11,7 @@ namespace stats {
 class Ckms {
     public:
       // TODO(hidenori): Add more functions if necessary.
+      void add(double v);
       double count() const;
       double estimateQuantile(double q);
 };

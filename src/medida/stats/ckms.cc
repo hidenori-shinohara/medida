@@ -3,6 +3,11 @@
 namespace medida {
 namespace stats {
 
+void Ckms::add(double v) {
+    // TODO(hidenori): Implement this
+}
+
+
 double Ckms::count() const {
     // TODO(hidenori): This is obviously a placeholder.
     return 0;
