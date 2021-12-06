@@ -79,6 +79,8 @@ void CkmsSample::Impl::Clear() {
 
 
 std::uint64_t CkmsSample::Impl::size() const {
+    // TODO(hidenori) This is a placeholder.
+    return 0;
 }
 
 
@@ -88,10 +90,13 @@ void CkmsSample::Impl::Update(std::int64_t value) {
 
 
 void CkmsSample::Impl::Update(std::int64_t value, Clock::time_point timestamp) {
+    // TODO(hidenori): This is where I need to pick the right CKMS to add this value
+    // and possibly swap the two CKMS's.
 }
 
 
 Snapshot CkmsSample::Impl::MakeSnapshot() const {
+    // TODO(hidenori): Decide if this is the right value to return.
     return {mCkms};
 }
 

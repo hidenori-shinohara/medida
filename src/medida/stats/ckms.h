@@ -5,12 +5,14 @@
 namespace medida {
 namespace stats {
 
+
+// TODO(hidenori): This file and the corresponding source file
+// is where the CKMS quantile estimation algorithm should be.
 class Ckms {
     public:
-        // TODO(hidenori) these are obviously a placeholder.
-      double count() const { return 0; }
-      double estimateQuantile(double q) const { return 0; };
-
+      // TODO(hidenori): Add more functions if necessary.
+      double count() const;
+      double estimateQuantile(double q);
 };
 
 } // namespace stats

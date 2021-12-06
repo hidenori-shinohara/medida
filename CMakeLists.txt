@@ -32,6 +32,7 @@ set(medida_SOURCES
   src/medida/stats/uniform_sample.cc
   src/medida/stats/exp_decay_sample.cc
   src/medida/stats/sliding_window_sample.cc
+  src/medida/stats/ckms.cc
   src/medida/stats/ckms_sample.cc
   src/medida/buckets.cc
   src/medida/counter.cc
