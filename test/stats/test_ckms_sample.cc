@@ -13,9 +13,10 @@ TEST(CKMSSampleTest, aSameValueEverySecond) {
     t += std::chrono::seconds(1);
   }
 
-  EXPECT_EQ(300, sample.size());
+  // We should only keep 30 seconds of data.
+  EXPECT_EQ(30, sample.size(t));
 
-  auto snapshot = sample.MakeSnapshot();
+  auto snapshot = sample.MakeSnapshot(t);
 
   EXPECT_EQ(100, snapshot.getValue(0.5));
   EXPECT_EQ(100, snapshot.getValue(0.99));
@@ -31,9 +32,10 @@ TEST(CKMSSampleTest, aThreeDifferentValues) {
     t += std::chrono::seconds(1);
   }
 
-  EXPECT_EQ(300, sample.size());
+  // We should only keep 30 seconds of data.
+  EXPECT_EQ(30, sample.size(t));
 
-  auto snapshot = sample.MakeSnapshot();
+  auto snapshot = sample.MakeSnapshot(t);
 
   EXPECT_EQ(1, snapshot.getValue(0.5));
   EXPECT_EQ(2, snapshot.getValue(0.99));

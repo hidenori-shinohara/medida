@@ -108,8 +108,8 @@ bool CKMSSample::Impl::isInNextWindow(Clock::time_point const& timestamp) const
 // TODO(hidenori): Think about what is the appropriate default accuracy.
 // For now, I'm putting {99th percentile, 0.1% error}.
 CKMSSample::Impl::Impl(std::chrono::seconds windowSize) :
-    mPrev({}),
-    mCur({}),
+    mPrev(std::make_shared<CKMS>(CKMS({}))),
+    mCur(std::make_shared<CKMS>(CKMS({}))),
     mLastAssertedTime(),
     mCurrentWindowBegin(),
     mWindowSize(windowSize)
