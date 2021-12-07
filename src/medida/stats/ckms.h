@@ -13,6 +13,7 @@
 namespace medida {
 namespace stats {
 
+    // TODO(hidenori): I should probably create a default constructor
 class CKMS {
  public:
   struct Quantile {

@@ -21,9 +21,11 @@ class CKMSSample : public Sample {
   ~CKMSSample();
   virtual void Clear();
   virtual std::uint64_t size() const;
+  virtual std::uint64_t size(Clock::time_point timestamp) const;
   virtual void Update(std::int64_t value);
   virtual void Update(std::int64_t value, Clock::time_point timestamp);
   virtual Snapshot MakeSnapshot() const;
+  virtual Snapshot MakeSnapshot(Clock::time_point timestamp) const;
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

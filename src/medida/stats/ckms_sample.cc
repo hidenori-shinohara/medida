@@ -12,6 +12,7 @@
 #include <map>
 #include <mutex>
 #include <random>
+#include <cassert>
 
 namespace medida {
 namespace stats {
@@ -24,14 +25,20 @@ class CKMSSample::Impl {
   ~Impl();
   void Clear();
   std::uint64_t size() const;
+  std::uint64_t size(Clock::time_point timestamp) const;
   void Update(std::int64_t value);
   void Update(std::int64_t value, Clock::time_point timestamp);
-  Snapshot MakeSnapshot();
+  Snapshot MakeSnapshot() const;
+  Snapshot MakeSnapshot(Clock::time_point timestamp) const;
  private:
-  void shift();
   std::shared_ptr<CKMS> mPrev, mCur;
-  Clock::time_point mPrevStartingPoint;
+  mutable Clock::time_point mLastAssertedTime;
+  Clock::time_point mCurrentWindowBegin;
   std::chrono::seconds mWindowSize;
+  Clock::time_point getCurrentWindowStartingPoint(Clock::time_point time) const;
+  void assertValidTime(Clock::time_point const& timestamp) const;
+  bool isInCurrentWindow(Clock::time_point const& timestamp) const;
+  bool isInNextWindow(Clock::time_point const& timestamp) const;
 };
 
 CKMSSample::CKMSSample() : impl_ {new CKMSSample::Impl {}} {
@@ -51,6 +58,10 @@ std::uint64_t CKMSSample::size() const {
   return impl_->size();
 }
 
+std::uint64_t CKMSSample::size(Clock::time_point timestamp) const {
+  return impl_->size(timestamp);
+}
+
 
 void CKMSSample::Update(std::int64_t value) {
   impl_->Update(value);
@@ -66,12 +77,32 @@ Snapshot CKMSSample::MakeSnapshot() const {
   return impl_->MakeSnapshot();
 }
 
+Snapshot CKMSSample::MakeSnapshot(Clock::time_point timestamp) const {
+  return impl_->MakeSnapshot(timestamp);
+}
+
 
 // === Implementation ===
 
-Clock::time_point getCurrentWindowStartingPoint(Clock::time_point time, std::chrono::seconds windowSize)
+Clock::time_point CKMSSample::Impl::getCurrentWindowStartingPoint(Clock::time_point time) const
 {
-    return time - (std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()) % windowSize);
+    return time - (std::chrono::duration_cast<std::chrono::seconds>(time.time_since_epoch()) % mWindowSize);
+}
+
+void CKMSSample::Impl::assertValidTime(Clock::time_point const& timestamp) const
+{
+    assert(mLastAssertedTime <= timestamp);
+    mLastAssertedTime = timestamp;
+}
+
+bool CKMSSample::Impl::isInCurrentWindow(Clock::time_point const& timestamp) const
+{
+    return mCurrentWindowBegin <= timestamp && timestamp <= mCurrentWindowBegin + mWindowSize;
+}
+
+bool CKMSSample::Impl::isInNextWindow(Clock::time_point const& timestamp) const
+{
+    return mCurrentWindowBegin + mWindowSize <= timestamp && timestamp <= mCurrentWindowBegin + 2 * mWindowSize;
 }
 
 // TODO(hidenori): Think about what is the appropriate default accuracy.
@@ -79,7 +110,8 @@ Clock::time_point getCurrentWindowStartingPoint(Clock::time_point time, std::chr
 CKMSSample::Impl::Impl(std::chrono::seconds windowSize) :
     mPrev({}),
     mCur({}),
-    mPrevStartingPoint(getCurrentWindowStartingPoint(medida::Clock::now(), windowSize) - windowSize),
+    mLastAssertedTime(),
+    mCurrentWindowBegin(),
     mWindowSize(windowSize)
 {
     Clear();
@@ -91,12 +123,22 @@ CKMSSample::Impl::~Impl() {
 
 
 void CKMSSample::Impl::Clear() {
+// TODO(hidenori): clear these values
+//    mPrev(),
+//    mCur({}),
+//    mLastAssertedTime(),
+//    mCurrentWindowBegin(),
 }
 
+
+std::uint64_t CKMSSample::Impl::size(Clock::time_point timestamp) const {
+    return MakeSnapshot(timestamp).size();
+}
 
 std::uint64_t CKMSSample::Impl::size() const {
-    return mPrev->count();
+    return size(Clock::now());
 }
+
 
 
 void CKMSSample::Impl::Update(std::int64_t value) {
@@ -104,45 +146,44 @@ void CKMSSample::Impl::Update(std::int64_t value) {
 }
 
 
-void CKMSSample::Impl::shift() {
-    auto curStartingPoint = getCurrentWindowStartingPoint(medida::Clock::now(), mWindowSize);
-    if (mPrevStartingPoint + mWindowSize == curStartingPoint)
-    {
-        return;
-    }
-    else if (mPrevStartingPoint + 2 * mWindowSize == curStartingPoint)
-    {
-        // mCur should be the next mPrev.
-        std::swap(mPrev, mCur);
-        mCur->reset();
-    }
-    else if (mPrevStartingPoint + 2 * mWindowSize < curStartingPoint)
-    {
-        // We haven't had any input for long enough that both mPrev and mCur should be empty.
-        mPrev->reset();
-        mCur->reset();
-        mPrevStartingPoint = curStartingPoint - mWindowSize;
-    }
-    else
-    {
-        throw std::invalid_argument("mPrevStartingPoint has an unexpected value");
-    }
-}
-
 void CKMSSample::Impl::Update(std::int64_t value, Clock::time_point timestamp) {
-    shift();
-    auto now = medida::Clock::now();
-    if (timestamp < now && timestamp < getCurrentWindowStartingPoint(now, mWindowSize))
+    assertValidTime(timestamp);
+    if (!isInCurrentWindow(timestamp))
     {
-        // Inser this value only if timestamp lies in the current time window.
-        mCur->insert(value);
+        // Enough time has passed, and the current window is no longer current.
+        // We need to shift it.
+
+        if (isInNextWindow(timestamp))
+        {
+            // The current window becomes the previous one.
+            std::swap(mPrev, mCur);
+            mCur->reset();
+        }
+        else
+        {
+            // We haven't had any input for long enough that both mPrev and mCur should be empty.
+            mPrev->reset();
+            mCur->reset();
+            mCurrentWindowBegin = getCurrentWindowStartingPoint(timestamp);
+        }
     }
+    mCur->insert(value);
 }
 
 
-Snapshot CKMSSample::Impl::MakeSnapshot() {
-    shift();
-    return {*mPrev};
+Snapshot CKMSSample::Impl::MakeSnapshot(Clock::time_point timestamp) const {
+    assertValidTime(timestamp);
+    if (isInCurrentWindow(timestamp)) {
+        return {*mPrev};
+    } else if (isInNextWindow(timestamp)) {
+        return {*mCur};
+    } else {
+        return {CKMS({})};
+    }
+}
+
+Snapshot CKMSSample::Impl::MakeSnapshot() const {
+    return MakeSnapshot(Clock::now());
 }
 
 
