@@ -108,8 +108,8 @@ bool CKMSSample::Impl::isInNextWindow(Clock::time_point const& timestamp) const
 // TODO(hidenori): Think about what is the appropriate default accuracy.
 // For now, I'm putting {99th percentile, 0.1% error}.
 CKMSSample::Impl::Impl(std::chrono::seconds windowSize) :
-    mPrev(std::make_shared<CKMS>(CKMS({}))),
-    mCur(std::make_shared<CKMS>(CKMS({}))),
+    mPrev(std::make_shared<CKMS>(CKMS())),
+    mCur(std::make_shared<CKMS>(CKMS())),
     mLastAssertedTime(),
     mCurrentWindowBegin(),
     mWindowSize(windowSize)
@@ -140,7 +140,6 @@ std::uint64_t CKMSSample::Impl::size() const {
 }
 
 
-
 void CKMSSample::Impl::Update(std::int64_t value) {
   Update(value, Clock::now());
 }
@@ -156,8 +155,9 @@ void CKMSSample::Impl::Update(std::int64_t value, Clock::time_point timestamp) {
         if (isInNextWindow(timestamp))
         {
             // The current window becomes the previous one.
-            std::swap(mPrev, mCur);
+            mPrev.swap(mCur);
             mCur->reset();
+            mCurrentWindowBegin += mWindowSize;
         }
         else
         {
@@ -178,7 +178,7 @@ Snapshot CKMSSample::Impl::MakeSnapshot(Clock::time_point timestamp) const {
     } else if (isInNextWindow(timestamp)) {
         return {*mCur};
     } else {
-        return {CKMS({})};
+        return {CKMS()};
     }
 }
 

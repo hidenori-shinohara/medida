@@ -9,11 +9,10 @@ TEST(CKMSSampleTest, aSameValueEverySecond) {
 
   auto t = medida::Clock::now();
   for (auto i = 0; i < 300; i++) {
-    sample.Update(100, t);
     t += std::chrono::seconds(1);
+    sample.Update(100, t);
   }
 
-  // We should only keep 30 seconds of data.
   EXPECT_EQ(30, sample.size(t));
 
   auto snapshot = sample.MakeSnapshot(t);
@@ -28,8 +27,8 @@ TEST(CKMSSampleTest, aThreeDifferentValues) {
 
   auto t = medida::Clock::now();
   for (auto i = 0; i < 300; i++) {
-    sample.Update(i % 3, t);
     t += std::chrono::seconds(1);
+    sample.Update(i % 3, t);
   }
 
   // We should only keep 30 seconds of data.

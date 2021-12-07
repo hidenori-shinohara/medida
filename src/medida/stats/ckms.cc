@@ -12,7 +12,7 @@ namespace medida {
 namespace stats {
 
 std::size_t CKMS::count() const {
-    return count_;
+    return count_ + buffer_count_;
 }
 
 CKMS::Quantile::Quantile(double quantile, double error)
@@ -23,6 +23,13 @@ CKMS::Quantile::Quantile(double quantile, double error)
 
 CKMS::Item::Item(double value, int lower_delta, int delta)
     : value(value), g(lower_delta), delta(delta) {}
+
+// TODO(hidenori): Figure out how to make this a little bit less crazy.
+std::vector<CKMS::Quantile> const DEFAULT_QUANTILE = {{0.99, 0.001}};
+
+CKMS::CKMS() : CKMS(DEFAULT_QUANTILE) {
+}
+
 
 CKMS::CKMS(const std::vector<Quantile>& quantiles)
     : quantiles_(quantiles), count_(0), buffer_{}, buffer_count_(0) {}

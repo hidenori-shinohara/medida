@@ -35,6 +35,7 @@ class CKMS {
   };
 
  public:
+  CKMS();
   explicit CKMS(const std::vector<Quantile>& quantiles);
 
   void insert(double value);
