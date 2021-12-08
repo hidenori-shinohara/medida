@@ -39,7 +39,7 @@ namespace stats {
 
 class CKMSSample : public Sample {
  public:
-  CKMSSample();
+  CKMSSample(std::chrono::seconds window_size = std::chrono::seconds(30));
   ~CKMSSample();
   virtual void Clear();
   virtual std::uint64_t size() const;

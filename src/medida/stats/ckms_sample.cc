@@ -39,7 +39,7 @@ class CKMSSample::Impl {
   bool isInNextWindow(Clock::time_point const& timestamp) const;
 };
 
-CKMSSample::CKMSSample() : impl_ {new CKMSSample::Impl {}} {
+CKMSSample::CKMSSample(std::chrono::seconds window_size) : impl_ {new CKMSSample::Impl {window_size}} {
 }
 
 
@@ -103,12 +103,12 @@ bool CKMSSample::Impl::isInNextWindow(Clock::time_point const& timestamp) const
     return mCurrentWindowBegin + mWindowSize <= timestamp && timestamp <= mCurrentWindowBegin + 2 * mWindowSize;
 }
 
-CKMSSample::Impl::Impl(std::chrono::seconds windowSize) :
+CKMSSample::Impl::Impl(std::chrono::seconds window_size) :
     mPrev(std::make_shared<CKMS>(CKMS())),
     mCur(std::make_shared<CKMS>(CKMS())),
     mLastAssertedTime(),
     mCurrentWindowBegin(),
-    mWindowSize(windowSize) {
+    mWindowSize(window_size) {
 }
 
 
