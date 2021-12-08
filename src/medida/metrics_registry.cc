@@ -14,12 +14,11 @@ namespace medida {
 
 class MetricsRegistry::Impl {
  public:
-  Impl();
+  Impl(std::chrono::seconds ckms_window_size = std::chrono::seconds(30));
   ~Impl();
   Counter& NewCounter(const MetricName &name, std::int64_t init_value = 0);
   Histogram& NewHistogram(const MetricName &name,
-      SamplingInterface::SampleType sample_type = SamplingInterface::kCKMS,
-      std::chrono::seconds ckms_window_size = std::chrono::seconds(30));
+      SamplingInterface::SampleType sample_type = SamplingInterface::kCKMS);
   Meter& NewMeter(const MetricName &name, std::string event_type, 
       Clock::duration rate_unit = std::chrono::seconds(1));
   Timer& NewTimer(const MetricName &name,
@@ -34,12 +33,13 @@ class MetricsRegistry::Impl {
   void ProcessAll(MetricProcessor& processor);
  private:
   std::map<MetricName, std::shared_ptr<MetricInterface>> metrics_;
+  std::chrono::seconds const mCkmsWindowSize;
   mutable std::mutex mutex_;
   template<typename T, typename... Args> T& NewMetric(const MetricName& name, Args... args);
 };
 
 
-MetricsRegistry::MetricsRegistry() : impl_ {new MetricsRegistry::Impl} {
+MetricsRegistry::MetricsRegistry(std::chrono::seconds ckms_window_size) : impl_ {new MetricsRegistry::Impl(ckms_window_size)} {
 }
 
 
@@ -53,8 +53,8 @@ Counter& MetricsRegistry::NewCounter(const MetricName &name, std::int64_t init_v
 
 
 Histogram& MetricsRegistry::NewHistogram(const MetricName &name,
-    SamplingInterface::SampleType sample_type, std::chrono::seconds ckms_window_size) {
-  return impl_->NewHistogram(name, sample_type, ckms_window_size);
+    SamplingInterface::SampleType sample_type) {
+  return impl_->NewHistogram(name, sample_type);
 }
 
 
@@ -86,7 +86,7 @@ std::map<MetricName, std::shared_ptr<MetricInterface>> MetricsRegistry::GetAllMe
 // === Implementation ===
 
 
-MetricsRegistry::Impl::Impl() {
+MetricsRegistry::Impl::Impl(std::chrono::seconds ckms_window_size) : mCkmsWindowSize(ckms_window_size) {
 }
 
 
@@ -100,8 +100,8 @@ Counter& MetricsRegistry::Impl::NewCounter(const MetricName &name, std::int64_t 
 
 
 Histogram& MetricsRegistry::Impl::NewHistogram(const MetricName &name,
-    SamplingInterface::SampleType sample_type, std::chrono::seconds ckms_window_size) {
-  return NewMetric<Histogram>(name, sample_type, ckms_window_size);
+    SamplingInterface::SampleType sample_type) {
+  return NewMetric<Histogram>(name, sample_type, mCkmsWindowSize);
 }
 
 
