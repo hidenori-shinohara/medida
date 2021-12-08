@@ -6,10 +6,16 @@
 #include <limits>
 #include <memory>
 
-// TODO(hidenori): properly take care of the license
-
 namespace medida {
 namespace stats {
+
+// The default quantiles that specify that we want the error to be less than 0.1% (=0.001)
+// for P99 and P50.
+std::vector<CKMS::Quantile> const kDefaultQuantiles = {{0.99, 0.001}, {0.5, 0.001}};
+
+CKMS::CKMS() : CKMS(kDefaultQuantiles) {
+}
+
 
 std::size_t CKMS::count() const {
     return count_ + buffer_count_;
@@ -23,12 +29,6 @@ CKMS::Quantile::Quantile(double quantile, double error)
 
 CKMS::Item::Item(double value, int lower_delta, int delta)
     : value(value), g(lower_delta), delta(delta) {}
-
-// TODO(hidenori): Figure out how to make this a little bit less crazy.
-std::vector<CKMS::Quantile> const DEFAULT_QUANTILE = {{0.99, 0.001}};
-
-CKMS::CKMS() : CKMS(DEFAULT_QUANTILE) {
-}
 
 
 CKMS::CKMS(const std::vector<Quantile>& quantiles)
