@@ -17,8 +17,6 @@
 namespace medida {
 namespace stats {
 
-// TODO(hidenori)
-// Figure out how to properly update the window size.
 class CKMSSample::Impl {
  public:
   Impl(std::chrono::seconds = std::chrono::seconds(30));

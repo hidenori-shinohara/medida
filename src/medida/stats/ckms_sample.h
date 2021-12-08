@@ -15,6 +15,28 @@
 namespace medida {
 namespace stats {
 
+// CKMSSample maintains two N-second windows: one for the current window, and
+// another for the previous window. It adds new data to the current one, and
+// it reports the previous one.
+//
+// For instance, if N = 30 and it's 1:00:45,
+// - it adds new data points to the current window [1:00:30, 1:01:00], and
+// - it reports the previous window [1:00:00, 1:00:30].
+
+
+// Each of size, Update, and MakeSnapshot has two versions, and
+// the one without a timestamp calls the other one with the current time.
+//
+// Unless there's a good reason to do so,
+// you should always use the one WITHOUT the timestamp.
+//
+// The one with a timestamp is generally used for testing. We pass a timestamp
+// as a way to fast-forward time to make testing easier.
+//
+// Regardless of which ones you use, the only rule that the caller must follow is
+// that you can't go back in time. You can't call any of these methods with
+// a timestamp T and call another method with a timestamp S if S < T.
+
 class CKMSSample : public Sample {
  public:
   CKMSSample();
