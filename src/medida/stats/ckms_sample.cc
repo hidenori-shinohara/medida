@@ -152,9 +152,9 @@ void CKMSSample::Impl::Update(std::int64_t value, Clock::time_point timestamp) {
 Snapshot CKMSSample::Impl::MakeSnapshot(Clock::time_point timestamp, uint64_t divisor) {
     std::lock_guard<std::mutex> lock{mutex_};
     if (AdvanceWindows(timestamp)) {
-        return {*prev_window_, divisor};
+        return {prev_window_, divisor};
     } else {
-        return {CKMS()};
+        return {std::make_shared<CKMS>(CKMS())};
     }
 }
 
