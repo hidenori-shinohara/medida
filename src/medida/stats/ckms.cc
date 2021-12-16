@@ -154,6 +154,7 @@ bool CKMS::insertBatch() {
       delta = static_cast<int>(std::floor(allowableError(idx + 1))) + 1;
     }
 
+    sample_.reserve(sample_.size() + 1);
     sample_.emplace(sample_.begin() + idx, v, 1, delta);
     count_++;
     item = idx++;
