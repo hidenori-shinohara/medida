@@ -114,8 +114,8 @@ bool CKMSSample::Impl::AdvanceWindows(Clock::time_point timestamp) {
 }
 
 CKMSSample::Impl::Impl(std::chrono::seconds window_size) :
-    prev_window_(std::make_shared<CKMS>(CKMS())),
-    cur_window_(std::make_shared<CKMS>(CKMS())),
+    prev_window_(std::make_shared<CKMS>()),
+    cur_window_(std::make_shared<CKMS>()),
     cur_window_begin_(),
     window_size_(window_size) {
 }
