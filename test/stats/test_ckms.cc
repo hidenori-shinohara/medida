@@ -211,3 +211,49 @@ TEST(CKMSTest, aCKMSPercentileOrder) {
   }
 }
 
+
+TEST(CKMSTest, aCKMSPercentileSmallSamples) {
+  // Input size =     1 (got, exp) => P50 =     1 vs     1, P75 =     1 vs     1, P90 =     1 vs     1, P99 =     1 vs     1, P999 =     1 vs     1
+  // Input size =     2 (got, exp) => P50 =     1 vs     1, P75 =     1 vs     2, P90 =     1 vs     2, P99 =     1 vs     2, P999 =     1 vs     2
+  // Input size =     3 (got, exp) => P50 =     1 vs     2, P75 =     2 vs     3, P90 =     2 vs     3, P99 =     2 vs     3, P999 =     2 vs     3
+  // Input size =     4 (got, exp) => P50 =     2 vs     2, P75 =     2 vs     3, P90 =     2 vs     4, P99 =     2 vs     4, P999 =     2 vs     4
+  // Input size =     5 (got, exp) => P50 =     2 vs     3, P75 =     2 vs     4, P90 =     3 vs     5, P99 =     3 vs     5, P999 =     3 vs     5
+  // Input size =    10 (got, exp) => P50 =     4 vs     5, P75 =     6 vs     8, P90 =     8 vs     9, P99 =     8 vs    10, P999 =     8 vs    10
+  // Input size =    15 (got, exp) => P50 =     6 vs     8, P75 =    10 vs    12, P90 =    12 vs    14, P99 =    13 vs    15, P999 =    13 vs    15
+  // Input size =    20 (got, exp) => P50 =     9 vs    10, P75 =    14 vs    15, P90 =    17 vs    18, P99 =    18 vs    20, P999 =    18 vs    20
+  // Input size =    30 (got, exp) => P50 =    14 vs    15, P75 =    21 vs    23, P90 =    26 vs    27, P99 =    28 vs    30, P999 =    28 vs    30
+  // Input size =    40 (got, exp) => P50 =    19 vs    20, P75 =    29 vs    30, P90 =    35 vs    36, P99 =    38 vs    40, P999 =    38 vs    40
+  // Input size =    50 (got, exp) => P50 =    24 vs    25, P75 =    36 vs    38, P90 =    44 vs    45, P99 =    48 vs    50, P999 =    48 vs    50
+  // Input size =   100 (got, exp) => P50 =    49 vs    50, P75 =    74 vs    75, P90 =    89 vs    90, P99 =    98 vs    99, P999 =    98 vs   100
+  // Input size =   110 (got, exp) => P50 =    54 vs    55, P75 =    81 vs    83, P90 =    98 vs    99, P99 =   107 vs   109, P999 =   108 vs   110
+  // Input size =   120 (got, exp) => P50 =    59 vs    60, P75 =    89 vs    90, P90 =   107 vs   108, P99 =   117 vs   119, P999 =   118 vs   120
+  // Input size =   130 (got, exp) => P50 =    64 vs    65, P75 =    96 vs    98, P90 =   116 vs   117, P99 =   127 vs   129, P999 =   128 vs   130
+  // Input size =   140 (got, exp) => P50 =    69 vs    70, P75 =   104 vs   105, P90 =   125 vs   126, P99 =   137 vs   139, P999 =   138 vs   140
+  // Input size =   150 (got, exp) => P50 =    74 vs    75, P75 =   111 vs   113, P90 =   134 vs   135, P99 =   147 vs   149, P999 =   148 vs   150
+  // Input size =   200 (got, exp) => P50 =    99 vs   100, P75 =   149 vs   150, P90 =   179 vs   180, P99 =   197 vs   198, P999 =   198 vs   200
+  // Input size =   250 (got, exp) => P50 =   124 vs   125, P75 =   186 vs   188, P90 =   224 vs   225, P99 =   246 vs   248, P999 =   248 vs   250
+  // Input size =   300 (got, exp) => P50 =   149 vs   150, P75 =   224 vs   225, P90 =   269 vs   270, P99 =   296 vs   297, P999 =   298 vs   300
+  // Input size =   400 (got, exp) => P50 =   199 vs   200, P75 =   299 vs   300, P90 =   359 vs   360, P99 =   395 vs   396, P999 =   398 vs   400
+  // Input size =   500 (got, exp) => P50 =   249 vs   250, P75 =   374 vs   375, P90 =   449 vs   450, P99 =   494 vs   495, P999 =   498 vs   500
+  // Input size =  1000 (got, exp) => P50 =   500 vs   500, P75 =   750 vs   750, P90 =   898 vs   900, P99 =   989 vs   990, P999 =   998 vs   999
+  // Input size =  5000 (got, exp) => P50 =  2499 vs  2500, P75 =  3749 vs  3750, P90 =  4496 vs  4500, P99 =  4948 vs  4950, P999 =  4994 vs  4995
+  // Input size = 10000 (got, exp) => P50 =  4996 vs  5000, P75 =  7496 vs  7500, P90 =  8995 vs  9000, P99 =  9898 vs  9900, P999 =  9988 vs  9990
+  std::vector<int> sampleSizes({1, 2, 3, 4, 5, 10, 15, 20, 30, 40, 50, 100, 110, 120, 130, 140, 150, 200, 250, 300, 400, 500, 1000, 5000, 10000});
+  for (int size : sampleSizes)
+  {
+    std::vector<CKMS::Quantile> v({{0.5, 0.001}, {0.99, 0.001}, {1, 0}});
+    auto ckms = CKMS(v);
+    for (int s = 1; s <= size; s++)
+    {
+        ckms.insert(s);
+    }
+    printf("Input size = %5d (got, exp) => P50 = %5d vs %5d, P75 = %5d vs %5d, P90 = %5d vs %5d, P99 = %5d vs %5d, P999 = %5d vs %5d\n",
+            size,
+            int(ckms.get(0.5)), int(ceil(0.5 * size)),
+            int(ckms.get(0.75)), int(ceil(0.75 * size)),
+            int(ckms.get(0.9)), int(ceil(0.9 * size)),
+            int(ckms.get(0.99)), int(ceil(0.99 * size)),
+            int(ckms.get(0.999)), int(ceil(0.999 * size)));
+  }
+}
+
